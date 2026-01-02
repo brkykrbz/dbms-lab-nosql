@@ -1,26 +1,29 @@
-
 package app.store;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
 import app.model.Student;
+import com.google.gson.Gson;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
 
 public class HazelcastStore {
-    static HazelcastInstance hz;
-    static IMap<String, Student> map;
+    private final HazelcastInstance hazelcastInstance;
+    private final IMap<String, String> map;
+    private final Gson gson;
 
-    public static void init() {
-        hz = HazelcastClient.newHazelcastClient(); // config dosyasına bağlanır
-        map = hz.getMap("ogrenciler");
-        for (int i = 0; i < 10000; i++) {
-            String id = "2025" + String.format("%06d", i);
-            Student s = new Student(id, "Ad Soyad " + i, "Bilgisayar");
-            map.put(id, s);
-        }
+    public HazelcastStore() {
+        // Hazelcast sunucusunu uygulamanın içinde başlatıyoruz
+        this.hazelcastInstance = Hazelcast.newHazelcastInstance();
+        this.map = hazelcastInstance.getMap("students");
+        this.gson = new Gson();
     }
 
-    public static Student get(String id) {
-        return map.get(id);
+    public void addStudent(Student student) {
+        String json = gson.toJson(student);
+        map.put(student.getStudent_no(), json);
+    }
+
+    public String getStudent(String studentNo) {
+        return map.get(studentNo);
     }
 }
